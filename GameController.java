@@ -46,7 +46,7 @@ public class GameController extends JPanel implements KeyListener, MouseListener
 
     static double zoom = 1000, minZoom = 500, maxZoom = 2500;
     
-    static double lightPercentage = 1, time = 0, dayCycle = 3600;
+    static double lightPercentage = 1, time = 0, dayCycle = 360000;
 
     private double drawFPS = 0, maxFPS = 40, sleepTime = 1000.0/maxFPS;
     private double vertLook = 0, horLook = 0, horRotSpeed = 900, vertRotSpeed = 2200;
@@ -59,7 +59,7 @@ public class GameController extends JPanel implements KeyListener, MouseListener
 
     private boolean canJump = false;
 
-    private boolean[] Keys = new boolean[8];
+    private boolean[] keys = new boolean[8];
 
     private int selectedItem = 1;
     private int selectedCube = -1;
@@ -93,7 +93,7 @@ public class GameController extends JPanel implements KeyListener, MouseListener
 
     //All the colors used for cubes in the game -> gets different colors for different polygons on certain cube types
 
-    static Color darkGreen = new Color(0,170,0);
+    static Color darkGreen = new Color(0,120,0);
     static Color lightGreen = new Color(0,210,0);
     static Color waterBlue = new Color(0,0,180,120);
     static Color black = new Color(20,20,20);
@@ -159,6 +159,7 @@ public class GameController extends JPanel implements KeyListener, MouseListener
         for(int x = 0; x < worldSize / chunkSize; x ++) {
             for(int y = 0; y < worldSize / chunkSize; y ++) {
                 chunks[x + (y * worldSize / chunkSize)] = new Chunk(map,chunkSize,worldHeight,x,y);
+                System.out.println("Chunk " + x + ", " + y + " generated");
             }
         }
 
@@ -309,7 +310,7 @@ public class GameController extends JPanel implements KeyListener, MouseListener
         double xMove = 0, yMove = 0, zMove = 0;
         double adjMovementFactor = (60.0 * movementFactor) / Calculator.clamp(drawFPS,15,maxFPS);
 
-        if(Keys[6]) {
+        if(keys[6]) {
             adjMovementFactor *= 1.4;
         }
 
@@ -320,25 +321,25 @@ public class GameController extends JPanel implements KeyListener, MouseListener
         zVel -= gravity;
         zVel = Calculator.clamp(zVel,-15,jumpVel);
 
-        if(Keys[0])
+        if(keys[0])
         {
             xMove += (adjMovementFactor * viewVector.getX());
             yMove += (adjMovementFactor * viewVector.getY());
         }
 
-        if(Keys[2])
+        if(keys[2])
         {
             xMove -= (adjMovementFactor * viewVector.getX());
             yMove -= (adjMovementFactor * viewVector.getY());
         }
 
-        if(Keys[1])
+        if(keys[1])
         {
             xMove += (adjMovementFactor * sideViewVector.getX());
             yMove += (adjMovementFactor * sideViewVector.getY());
         }
 
-        if(Keys[3])
+        if(keys[3])
         {
             xMove -= (adjMovementFactor * sideViewVector.getX());
             yMove -= (adjMovementFactor * sideViewVector.getY());
@@ -569,15 +570,15 @@ public class GameController extends JPanel implements KeyListener, MouseListener
 
     public void keyPressed(KeyEvent e) {
         if(e.getKeyCode() == KeyEvent.VK_W)
-            Keys[0] = true;
+            keys[0] = true;
         if(e.getKeyCode() == KeyEvent.VK_A)
-            Keys[1] = true;
+            keys[1] = true;
         if(e.getKeyCode() == KeyEvent.VK_S)
-            Keys[2] = true;
+            keys[2] = true;
         if(e.getKeyCode() == KeyEvent.VK_D)
-            Keys[3] = true;
+            keys[3] = true;
         if(e.getKeyCode() == KeyEvent.VK_SPACE) {
-            Keys[4] = true;
+            keys[4] = true;
             if(canJump) {
                 zVel = jumpVel;
                 viewFrom[2] += 0.01;
@@ -585,13 +586,13 @@ public class GameController extends JPanel implements KeyListener, MouseListener
             }
         }
         if(e.getKeyCode() == KeyEvent.VK_SHIFT) {
-            Keys[5] = true;
+            keys[5] = true;
         }
         if(e.getKeyCode() == KeyEvent.VK_CONTROL) {
-            Keys[6] = true;
+            keys[6] = true;
         }
         if(e.getKeyCode() == KeyEvent.VK_F) {
-            Keys[7] = true;
+            keys[7] = true;
         }
         if(e.getKeyCode() == KeyEvent.VK_1) { selectedItem = 1; }
         if(e.getKeyCode() == KeyEvent.VK_2) { selectedItem = 2; }
@@ -608,21 +609,21 @@ public class GameController extends JPanel implements KeyListener, MouseListener
 
     public void keyReleased(KeyEvent e) {
         if(e.getKeyCode() == KeyEvent.VK_W)
-            Keys[0] = false;
+            keys[0] = false;
         if(e.getKeyCode() == KeyEvent.VK_A)
-            Keys[1] = false;
+            keys[1] = false;
         if(e.getKeyCode() == KeyEvent.VK_S)
-            Keys[2] = false;
+            keys[2] = false;
         if(e.getKeyCode() == KeyEvent.VK_D)
-            Keys[3] = false;
+            keys[3] = false;
         if(e.getKeyCode() == KeyEvent.VK_SPACE)
-            Keys[4] = false;
+            keys[4] = false;
         if(e.getKeyCode() == KeyEvent.VK_SHIFT)
-            Keys[5] = false;
+            keys[5] = false;
         if(e.getKeyCode() == KeyEvent.VK_CONTROL) 
-            Keys[6] = false;
+            keys[6] = false;
         if(e.getKeyCode() == KeyEvent.VK_F) 
-            Keys[7] = false;
+            keys[7] = false;
     }
 
     public void keyTyped(KeyEvent e) {
@@ -687,7 +688,7 @@ public class GameController extends JPanel implements KeyListener, MouseListener
     public void mouseReleased(MouseEvent m) {}
 
     public void mouseWheelMoved(MouseWheelEvent m) {
-        if(Keys[7]) {
+        if(keys[7]) {
             zoom -= 25 * m.getUnitsToScroll();
             zoom = Calculator.clamp(zoom,minZoom,maxZoom);
         } else {
