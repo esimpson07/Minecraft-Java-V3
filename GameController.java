@@ -30,6 +30,24 @@ import javax.sound.sampled.Clip;
 import javax.swing.JPanel;
 
 public class GameController extends JPanel implements KeyListener, MouseListener, MouseMotionListener, MouseWheelListener {
+    /**
+     * Author Edward Simpson
+     * Using tutorial for matrix multiplication & math originally from https://www.youtube.com/watch?v=p4Iz0XJY-Qk&t=1294s
+     * Transcribed to Java and then turned into normal trig instead of matrix multiplication -> too load bearing
+     * Certain parts of this code are from tutorials & examples on stack overflow: 
+     * Examples: Clip playing tutorial and getting multiple clips to play back to back from 
+     * https://stackoverflow.com/questions/557903/how-can-i-wait-for-a-java-sound-clip-to-finish-playing-back
+     * Centering g.drawString() on a point
+     * https://stackoverflow.com/questions/27706197/how-can-i-center-graphics-drawstring-in-java
+     * How to get image width and height
+     * https://stackoverflow.com/questions/672916/how-to-get-image-height-and-width-using-java
+     * 
+     * This code is mostly original though, and everything beyond the math I wrote myself. I used code from online to 
+     * generate perlin noise in the noise generator class, due to the complexity of the algorithm & the familiarity
+     * it requires to write it well.
+     * 
+     * Hopefully you enjoy playing my game!!!
+     */
     Robot robot;
 
     static ArrayList<DPolygon> DPolygons;
@@ -65,6 +83,8 @@ public class GameController extends JPanel implements KeyListener, MouseListener
     
     private Clip songArray[];
 
+    //all the variables to move the camera
+    
     static double[] viewFrom = new double[]{0, 0, 0},
                     viewTo = new double[]{0, 0, 0},
                     lightDir = new double[]{1, 1, 1};
@@ -82,6 +102,7 @@ public class GameController extends JPanel implements KeyListener, MouseListener
 
     private int[] newPolygonOrder;
 
+    private boolean prepExit = false;
     private boolean canJump = false;
 
     private boolean[] keys = new boolean[8];
@@ -493,6 +514,10 @@ public class GameController extends JPanel implements KeyListener, MouseListener
         drawMouseAim(g);            
         //FPS display
         drawDeveloperTools(g);
+        
+        if(prepExit) {
+            drawCenteredMessage(g, "Press ENTER to exit, ESC to cancel.", minecraftFont);
+        }
 
         drawHotBar(g);
 
@@ -505,6 +530,15 @@ public class GameController extends JPanel implements KeyListener, MouseListener
         g.setFont(minecraftFont);
         g.drawString("FPS: " + (int)drawFPS, 40, 40);
         g.drawString("X Y Z: " + Calculator.roundTo(viewFrom[0] - worldSize / 2,2) + " "  + Calculator.roundTo(viewFrom[1] - worldSize / 2,2) + " "  + Calculator.roundTo(viewFrom[2],2), 40, 80);
+    }
+
+    private void drawCenteredMessage(Graphics g, String text, Font font) { //draws the message given to be centered to the screen
+        FontMetrics metrics = g.getFontMetrics(font);
+        int x = ((int)GameRunner.screenSize.getWidth() - metrics.stringWidth(text)) / 2;
+        int y = ((int)GameRunner.screenSize.getHeight() - metrics.getHeight()) / 2;
+        g.setColor(Color.BLACK);
+        g.setFont(font);
+        g.drawString(text, x, y);
     }
 
     private void drawHotBar(Graphics g) { //draws the hotbar image and the selector, as well as the blocks inside the hotbar
@@ -540,14 +574,14 @@ public class GameController extends JPanel implements KeyListener, MouseListener
         g.drawString(text, x, y);
     }
     
-    private void shuffleSoundtrack() {
+    private void shuffleSoundtrack() { //checks if the current song is done playing, if it is then it picks a random song
         if(currentSong.getMicrosecondLength() == currentSong.getMicrosecondPosition()) {
             currentSong = songArray[(int)(Math.random() * 7)];
             currentSong.start();
         }
     }
     
-    private void setPolygonOver() {
+    private void setPolygonOver() { //sets the polygon that the mouse is selecting -> closest polygon inside of the mouse
         polygonOver = null;
         selectedCube = -1;
         for(int i = newPolygonOrder.length-1; i >= 0; i --) {
@@ -564,19 +598,17 @@ public class GameController extends JPanel implements KeyListener, MouseListener
         }
     }
 
-    private void sleepAndRefresh() {
+    private void sleepAndRefresh() { //tries to keep the framerate consistent: checks time and sleeps however long it takes to sustain the max FPS, however it is very primitive
         long timeSLU = (long) (System.currentTimeMillis() - lastRefresh); 
 
         checks ++;            
-        if(checks >= 15)
-        {
-            drawFPS = checks/((System.currentTimeMillis() - lastFPSCheck)/1000.0);
+        if(checks >= 15) {
+            drawFPS = checks / ((System.currentTimeMillis() - lastFPSCheck) / 1000.0);
             lastFPSCheck = System.currentTimeMillis();
             checks = 0;
         }
 
-        if(timeSLU < 1000.0/maxFPS)
-        {
+        if(timeSLU < 1000.0/maxFPS) {
             try {
                 Thread.sleep((long) (1000.0/maxFPS - timeSLU));
             } catch (InterruptedException e) {
@@ -589,7 +621,7 @@ public class GameController extends JPanel implements KeyListener, MouseListener
         repaint();
     }
 
-    private void setOrder() {
+    private void setOrder() { //sets the order of the drawable polygons
         double[] k = new double[DPolygons.size()];
         newPolygonOrder = new int[DPolygons.size()];
 
@@ -617,11 +649,11 @@ public class GameController extends JPanel implements KeyListener, MouseListener
         }
     }
 
-    static int[] getChunkCoordsIn(int x, int y) {
+    static int[] getChunkCoordsIn(int x, int y) { // returns the chunk coordinates that the normal coordinate is in
         return new int[]{x / chunkSize,y / chunkSize};
     }
 
-    static int getChunkNumberIn(int x, int y) {
+    static int getChunkNumberIn(int x, int y) { // returns the chunk value that the coordinate is inside
         for(int i = 0; i < chunks.length; i ++) {
             if(chunks[i].getX() == x / chunkSize && chunks[i].getY() == y / chunkSize) {
                 return i;
@@ -630,15 +662,19 @@ public class GameController extends JPanel implements KeyListener, MouseListener
         return -1;
     }
 
-    public void keyPressed(KeyEvent e) {
-        if(e.getKeyCode() == KeyEvent.VK_W)
+    public void keyPressed(KeyEvent e) { //assigns the key variables for movement
+        if(e.getKeyCode() == KeyEvent.VK_W) {
             keys[0] = true;
-        if(e.getKeyCode() == KeyEvent.VK_A)
+        }
+        if(e.getKeyCode() == KeyEvent.VK_A) {
             keys[1] = true;
-        if(e.getKeyCode() == KeyEvent.VK_S)
+        }
+        if(e.getKeyCode() == KeyEvent.VK_S) {
             keys[2] = true;
-        if(e.getKeyCode() == KeyEvent.VK_D)
+        }
+        if(e.getKeyCode() == KeyEvent.VK_D) {
             keys[3] = true;
+        }
         if(e.getKeyCode() == KeyEvent.VK_SPACE) {
             keys[4] = true;
             if(canJump) {
@@ -665,8 +701,14 @@ public class GameController extends JPanel implements KeyListener, MouseListener
         if(e.getKeyCode() == KeyEvent.VK_7) { selectedItem = 7; }
         if(e.getKeyCode() == KeyEvent.VK_8) { selectedItem = 8; }
         if(e.getKeyCode() == KeyEvent.VK_9) { selectedItem = 9; }
-        if(e.getKeyCode() == KeyEvent.VK_ESCAPE)
-            System.exit(0);
+        if(e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+            prepExit = !prepExit;
+        }
+        if(e.getKeyCode() == KeyEvent.VK_ENTER) {
+            if(prepExit) {
+                System.exit(0);
+            }
+        }
     }
 
     public void keyReleased(KeyEvent e) {
