@@ -3,17 +3,16 @@ import java.awt.Color;
 public class Cube {
     private double x, y, z, width, length, height, rotation = Math.PI * 0.75;
     private double[] rotAdd = new double[4];
+    private double[] angle = new double[4];
     private double x1, x2, x3, x4, y1, y2, y3, y4;
-    private DPolygon[] Polys = new DPolygon[6];
+    private DPolygon[] polys = new DPolygon[6];
     private Color[] c;
     private boolean[] polysToDraw;
-    private double[] angle;
     private int id;
     private int type;
     private boolean normal;
     
-    public Cube(double x, double y, double z, double width, double length, double height, int type)
-    {
+    public Cube(double x, double y, double z, double width, double length, double height, int type) {
         this.id = (int)(Math.random() * 2147483647);
         this.c = getColor(type);
         this.polysToDraw = new boolean[]{true,true,true,true,true,true};
@@ -59,7 +58,7 @@ public class Cube {
         }
     }
     
-    void setValuesForType(int type) {
+    public void setValuesForType(int type) {
         if(type == GameController.glass || type == GameController.water) {
             normal = false;
         } else {
@@ -67,15 +66,15 @@ public class Cube {
         }
     }
     
-    double[] getAttributes() {
+    public double[] getAttributes() {
         return new double[]{x,y,z,width,length,height};
     }
     
-    double[] getCoords() {
+    public double[] getCoords() {
         return new double[]{x,y,z};
     }
     
-    double[] getAdjacentCube(int face) {
+    public double[] getAdjacentCube(int face) {
         if(face == 0) {
             return new double[]{x, y, z - height};
         } else if(face == 1) {
@@ -93,15 +92,15 @@ public class Cube {
         }
     }
     
-    int getID() {
+    public int getID() {
         return id;
     }
     
-    double getDist(double x, double y, double z) {
+    public double getDist(double x, double y, double z) {
         return Math.sqrt(Math.pow(this.x - x,2) + Math.pow(this.y - y,2) + Math.pow(this.z - z,2));
     }
     
-    void softAdjacencyCheck() {
+    public void softAdjacencyCheck() {
         int chunk = GameController.getChunkNumberIn((int)x,(int)y);
         int sideLength = GameController.worldSize / GameController.chunkSize;
         int[] adjacentChunks = new int[5]; //left (chunk - 1) right (chunk + 1) above (chunk + sideLength) below (chunk - sideLength)
@@ -195,9 +194,7 @@ public class Cube {
         }
     }
     
-    void setRotAdd()
-    {
-        angle = new double[4];
+    public void setRotAdd() {
         
         double xDif = - width/2 + 0.00001;
         double yDif = - length/2 + 0.00001;
@@ -241,8 +238,7 @@ public class Cube {
         rotAdd[3] = angle[3] + 0.25 * Math.PI;
     }
     
-    void updateDirection(double toX, double toY)
-    {
+    public void updateDirection(double toX, double toY) {
         double xDif = toX - (x + width/2) + 0.00001;
         double yDif = toY - (y + length/2) + 0.00001;
         
@@ -256,10 +252,11 @@ public class Cube {
         updatePoly();        
     }
 
-    void updatePoly()
-    {
+    public void updatePoly() {
         for(int i = 0; i < 6; i ++) {
-            GameController.DPolygons.remove(Polys[i]);
+            if(polys[i] != null) {
+                GameController.DPolygons.remove(polys[i]);
+            }
         }
         
         double radius = Math.sqrt(width*width + length*length);
@@ -274,74 +271,74 @@ public class Cube {
         y3 = y+length*0.5+radius*0.5*Math.sin(rotation + rotAdd[2]);
         y4 = y+length*0.5+radius*0.5*Math.sin(rotation + rotAdd[3]);
    
-        if(polysToDraw[0] == true && Polys[0] != null) {
-            Polys[0].setX(new double[]{x1, x2, x3, x4});
-            Polys[0].setY(new double[]{y1, y2, y3, y4});;
-            Polys[0].setZ(new double[]{z, z, z, z});
-        } else  if(polysToDraw[0] == true && Polys[0] == null){
-            Polys[0] = new DPolygon(new double[]{x1, x2, x3, x4}, new double[]{y1, y2, y3, y4}, new double[]{z, z, z, z}, c[0], 0, id);
+        if(polysToDraw[0] == true && polys[0] != null) {
+            polys[0].setX(new double[]{x1, x2, x3, x4});
+            polys[0].setY(new double[]{y1, y2, y3, y4});;
+            polys[0].setZ(new double[]{z, z, z, z});
+        } else  if(polysToDraw[0] == true && polys[0] == null){
+            polys[0] = new DPolygon(new double[]{x1, x2, x3, x4}, new double[]{y1, y2, y3, y4}, new double[]{z, z, z, z}, c[0], 0, id);
         } else {
-            Polys[0] = null;
+            polys[0] = null;
         }
-        if(polysToDraw[1] == true && Polys[1] != null) {
-            Polys[1].setX(new double[]{x4, x3, x2, x1});
-            Polys[1].setY(new double[]{y4, y3, y2, y1});
-            Polys[1].setZ(new double[]{z+height, z+height, z+height, z+height});
-        } else if(polysToDraw[1] == true && Polys[1] == null){
-            Polys[1] = new DPolygon(new double[]{x4, x3, x2, x1}, new double[]{y4, y3, y2, y1}, new double[]{z+height, z+height, z+height, z+height}, c[1], 1, id);
+        if(polysToDraw[1] == true && polys[1] != null) {
+            polys[1].setX(new double[]{x4, x3, x2, x1});
+            polys[1].setY(new double[]{y4, y3, y2, y1});
+            polys[1].setZ(new double[]{z+height, z+height, z+height, z+height});
+        } else if(polysToDraw[1] == true && polys[1] == null){
+            polys[1] = new DPolygon(new double[]{x4, x3, x2, x1}, new double[]{y4, y3, y2, y1}, new double[]{z+height, z+height, z+height, z+height}, c[1], 1, id);
         } else {    
-            Polys[1] = null;
+            polys[1] = null;
         } 
-        if(polysToDraw[2] == true && Polys[2] != null) {
-            Polys[2].setX(new double[]{x1, x1, x2, x2});
-            Polys[2].setY(new double[]{y1, y1, y2, y2});
-            Polys[2].setZ(new double[]{z, z+height, z+height, z});
-        } else if(polysToDraw[2] == true && Polys[2] == null){
-            Polys[2] = new DPolygon(new double[]{x1, x1, x2, x2}, new double[]{y1, y1, y2, y2}, new double[]{z, z+height, z+height, z}, c[2], 2, id);
+        if(polysToDraw[2] == true && polys[2] != null) {
+            polys[2].setX(new double[]{x1, x1, x2, x2});
+            polys[2].setY(new double[]{y1, y1, y2, y2});
+            polys[2].setZ(new double[]{z, z+height, z+height, z});
+        } else if(polysToDraw[2] == true && polys[2] == null){
+            polys[2] = new DPolygon(new double[]{x1, x1, x2, x2}, new double[]{y1, y1, y2, y2}, new double[]{z, z+height, z+height, z}, c[2], 2, id);
         } else {
-            Polys[2] = null;
+            polys[2] = null;
         }
-        if(polysToDraw[3] == true && Polys[3] != null) {
-            Polys[3].setX(new double[]{x2, x2, x3, x3});
-            Polys[3].setY(new double[]{y2, y2, y3, y3});
-            Polys[3].setZ(new double[]{z, z+height, z+height, z});
-        } else if(polysToDraw[3] == true && Polys[3] == null){
-            Polys[3] = new DPolygon(new double[]{x2, x2, x3, x3}, new double[]{y2, y2, y3, y3},  new double[]{z, z+height, z+height, z}, c[3], 3, id);
+        if(polysToDraw[3] == true && polys[3] != null) {
+            polys[3].setX(new double[]{x2, x2, x3, x3});
+            polys[3].setY(new double[]{y2, y2, y3, y3});
+            polys[3].setZ(new double[]{z, z+height, z+height, z});
+        } else if(polysToDraw[3] == true && polys[3] == null){
+            polys[3] = new DPolygon(new double[]{x2, x2, x3, x3}, new double[]{y2, y2, y3, y3},  new double[]{z, z+height, z+height, z}, c[3], 3, id);
         } else {
-            Polys[3] = null;
+            polys[3] = null;
         }
-        if(polysToDraw[4] == true && Polys[4] != null) {
-            Polys[4].setX(new double[]{x3, x3, x4, x4});
-            Polys[4].setY(new double[]{y3, y3, y4, y4});
-            Polys[4].setZ(new double[]{z, z+height, z+height, z});
-        } else if(polysToDraw[4] == true && Polys[4] == null){
-            Polys[4] = new DPolygon(new double[]{x3, x3, x4, x4}, new double[]{y3, y3, y4, y4},  new double[]{z, z+height, z+height, z}, c[4], 4, id);
+        if(polysToDraw[4] == true && polys[4] != null) {
+            polys[4].setX(new double[]{x3, x3, x4, x4});
+            polys[4].setY(new double[]{y3, y3, y4, y4});
+            polys[4].setZ(new double[]{z, z+height, z+height, z});
+        } else if(polysToDraw[4] == true && polys[4] == null){
+            polys[4] = new DPolygon(new double[]{x3, x3, x4, x4}, new double[]{y3, y3, y4, y4},  new double[]{z, z+height, z+height, z}, c[4], 4, id);
         } else {
-            Polys[4] = null;
+            polys[4] = null;
         }
-        if(polysToDraw[5] == true && Polys[5] != null) {
-            Polys[5].setX(new double[]{x4, x4, x1, x1});
-            Polys[5].setY(new double[]{y4, y4, y1, y1});
-            Polys[5].setZ(new double[]{z, z+height, z+height, z});
-        } else if(polysToDraw[5] == true && Polys[5] == null){
-            Polys[5] = new DPolygon(new double[]{x4, x4, x1, x1}, new double[]{y4, y4, y1, y1},  new double[]{z, z+height, z+height, z}, c[5], 5, id);
+        if(polysToDraw[5] == true && polys[5] != null) {
+            polys[5].setX(new double[]{x4, x4, x1, x1});
+            polys[5].setY(new double[]{y4, y4, y1, y1});
+            polys[5].setZ(new double[]{z, z+height, z+height, z});
+        } else if(polysToDraw[5] == true && polys[5] == null){
+            polys[5] = new DPolygon(new double[]{x4, x4, x1, x1}, new double[]{y4, y4, y1, y1},  new double[]{z, z+height, z+height, z}, c[5], 5, id);
         } else {
-            Polys[5] = null;
+            polys[5] = null;
         }
         
         for(int i = 0; i < 6; i++)
         {
-            if(Polys[i] != null) {
-                GameController.DPolygons.add(Polys[i]);
+            if(polys[i] != null) {
+                GameController.DPolygons.add(polys[i]);
             }
         }
     }
     
-    void changeAdjacentPoly(int face, boolean state) {
+    public void changeAdjacentPoly(int face, boolean state) {
         polysToDraw[getAdjacentPoly(face)] = state;
     }
     
-    int getAdjacentPoly(int face) {
+    public int getAdjacentPoly(int face) {
         if(face == 0) {
             return 1;
         } else if(face == 1) {
@@ -359,18 +356,6 @@ public class Cube {
         }
     }
     
-    void changePoly(int face, boolean state) {
-        polysToDraw[face] = state;
-    }
-    
-    boolean[] getPolysToDraw() {
-        return polysToDraw;
-    }
-    
-    public int getType() {
-        return type;
-    }
-    
     public boolean isBedrock() {
         return type == GameController.bedrock;
     }
@@ -385,7 +370,7 @@ public class Cube {
 
     public void removeCubeInChunk() {
         for(int i = 0; i < 6; i ++) {
-            GameController.DPolygons.remove(Polys[i]);
+            GameController.DPolygons.remove(polys[i]);
         }
     }
     
@@ -393,7 +378,7 @@ public class Cube {
     {
         for(int i = 0; i < 6; i ++) {
             changeAdjacentCubePoly(i,true);
-            GameController.DPolygons.remove(Polys[i]);
+            GameController.DPolygons.remove(polys[i]);
         }
         for(int i = 0; i < GameController.chunks.length; i ++) {
             GameController.chunks[i].removeCube(this);
