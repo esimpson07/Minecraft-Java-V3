@@ -46,6 +46,8 @@ public class GameController extends JPanel implements KeyListener, MouseListener
      * generate perlin noise in the noise generator class, due to the complexity of the algorithm & the familiarity
      * it requires to write it well.
      * 
+     * 1,914 lines of code including this comment ᕙ(▀̿̿Ĺ̯̿̿▀̿ ̿) ᕗ
+     * 
      * Hopefully you enjoy playing my game!!!
      */
     Robot robot;
@@ -114,7 +116,7 @@ public class GameController extends JPanel implements KeyListener, MouseListener
     //All of the variables for world generation -> all sizes are in cubes (meters)
 
     static final int worldSize = 32;
-    static final int chunkSize = 1;
+    static final int chunkSize = 4;
     static final int worldHeight = 32;
     static final double renderDistance = 16;
     static final double renderDistanceInchunks = renderDistance / chunkSize;
