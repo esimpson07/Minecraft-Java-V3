@@ -1,7 +1,7 @@
 import java.awt.Color;
 
 public class Cube {
-    private double x, y, z, width, length, height, rotation = Math.PI*0.75;
+    private double x, y, z, width, length, height, rotation = Math.PI * 0.75;
     private double[] rotAdd = new double[4];
     private double x1, x2, x3, x4, y1, y2, y3, y4;
     private DPolygon[] Polys = new DPolygon[6];
