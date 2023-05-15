@@ -17,10 +17,16 @@ import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.FontFormatException;
 import java.awt.GraphicsEnvironment;
+
 import java.util.ArrayList;
+
 import java.io.IOException;
 import java.io.File;
+
 import javax.imageio.ImageIO;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
 import javax.swing.JPanel;
 
 public class GameController extends JPanel implements KeyListener, MouseListener, MouseMotionListener, MouseWheelListener {
@@ -35,10 +41,29 @@ public class GameController extends JPanel implements KeyListener, MouseListener
     private String fontFilePath = "Resources/Fonts/font.ttf";
     private String hotbarFilePath = "Resources/Images/hotbar.png";
     private String selectorFilePath = "Resources/Images/selector.png";
+    
+    private String song1FilePath = "Resources/Soundtrack/1.wav";
+    private String song2FilePath = "Resources/Soundtrack/2.wav";
+    private String song3FilePath = "Resources/Soundtrack/3.wav";
+    private String song4FilePath = "Resources/Soundtrack/4.wav";
+    private String song5FilePath = "Resources/Soundtrack/5.wav";
+    private String song6FilePath = "Resources/Soundtrack/6.wav";
+    private String song7FilePath = "Resources/Soundtrack/7.wav";
 
     private Font minecraftFont;
     private BufferedImage hotbar;
     private BufferedImage selector;
+    
+    private Clip song1;
+    private Clip song2;
+    private Clip song3;
+    private Clip song4;
+    private Clip song5;
+    private Clip song6;
+    private Clip song7;
+    private Clip currentSong;
+    
+    private Clip songArray[];
 
     static double[] viewFrom = new double[]{0, 0, 0},
                     viewTo = new double[]{0, 0, 0},
@@ -105,7 +130,7 @@ public class GameController extends JPanel implements KeyListener, MouseListener
     static Color beige = new Color(232,214,158);
     static Color translucent = new Color(200, 200, 230, 40);
     static Color bgColor = new Color(50,150,255);
-
+    
     public GameController() {
         this.addKeyListener(this);
         setFocusable(true);
@@ -115,15 +140,56 @@ public class GameController extends JPanel implements KeyListener, MouseListener
 
         initMouse();
         initVars();
+        initMusic();
         loadResources();
         loadCubes();
         refreshAllCubes();
+    }
+
+    private void initMouse() {
+        try {
+            robot = new Robot();
+            Toolkit toolkit = Toolkit.getDefaultToolkit();
+            Cursor invisibleCursor = toolkit.createCustomCursor(new BufferedImage(1, 1, BufferedImage.TRANSLUCENT), new Point(0,0), "InvisibleCursor");        
+            setCursor(invisibleCursor);
+        } catch (AWTException e) {
+            e.printStackTrace();
+        }
     }
 
     private void initVars() {
         DPolygons = new ArrayList<DPolygon>();
         polygonOver = null;
         chunks = new Chunk[(worldSize / chunkSize) * (worldSize / chunkSize)];
+        songArray = new Clip[7];
+    }
+    
+    private void initMusic() {
+        song1 = loadClip(song1FilePath);
+        song2 = loadClip(song2FilePath);
+        song3 = loadClip(song3FilePath);
+        song4 = loadClip(song4FilePath);
+        song5 = loadClip(song5FilePath);
+        song6 = loadClip(song6FilePath);
+        song7 = loadClip(song7FilePath);
+        songArray = new Clip[]{song1, song2, song3, song4, song5, song6, song7};
+        currentSong = songArray[(int)(Math.random() * 7)];
+        currentSong.start();
+    }
+    
+    private Clip loadClip(String filePath) {
+        AudioInputStream audioInputStream; 
+        Clip clip = null;
+        try {
+            audioInputStream =  
+                AudioSystem.getAudioInputStream(new File(filePath).getAbsoluteFile());
+            // assigning a clip to the variable
+            clip = AudioSystem.getClip(); 
+            clip.open(audioInputStream);
+        } catch(Exception e) {
+            System.out.println("Error with clip import!!! File path missing: " + filePath);
+        }
+        return clip;
     }
 
     private void loadResources() {
@@ -184,17 +250,6 @@ public class GameController extends JPanel implements KeyListener, MouseListener
         System.out.println("Done drawing chunks.");
     }
 
-    private void initMouse() {
-        try {
-            robot = new Robot();
-            Toolkit toolkit = Toolkit.getDefaultToolkit();
-            Cursor invisibleCursor = toolkit.createCustomCursor(new BufferedImage(1, 1, BufferedImage.TRANSLUCENT), new Point(0,0), "InvisibleCursor");        
-            setCursor(invisibleCursor);
-        } catch (AWTException e) {
-            e.printStackTrace();
-        }
-    }
-
     private void refreshAllCubes() {
         System.out.println("Checking cube adjacencies & deleting faces");
         for(int i = 0; i < chunks.length; i ++) {
@@ -246,19 +301,6 @@ public class GameController extends JPanel implements KeyListener, MouseListener
         }
     }
 
-    public int[] getChunkCoordsIn(int x, int y) {
-        return new int[]{x / chunkSize,y / chunkSize};
-    }
-
-    static int getChunkNumberIn(int x, int y) {
-        for(int i = 0; i < chunks.length; i ++) {
-            if(chunks[i].getX() == x / chunkSize && chunks[i].getY() == y / chunkSize) {
-                return i;
-            }
-        } 
-        return -1;
-    }
-
     private boolean withinRange(double val, double min, double max) {
         return val <= max && val >= min;
     }
@@ -293,7 +335,7 @@ public class GameController extends JPanel implements KeyListener, MouseListener
         robot.mouseMove((int)GameRunner.screenSize.getWidth()/2, (int)GameRunner.screenSize.getHeight()/2);
     }
 
-    void mouseMovement(double newMouseX, double newMouseY) {        
+    private void mouseMovement(double newMouseX, double newMouseY) {        
         double difX = (newMouseX - GameRunner.screenSize.getWidth()/2);
         double difY = (newMouseY - GameRunner.screenSize.getHeight()/2);
         difY *= 6 - Math.abs(vertLook) * 5;
@@ -305,7 +347,7 @@ public class GameController extends JPanel implements KeyListener, MouseListener
         updateView();
     }
 
-    void cameraMovement() {
+    private void cameraMovement() {
         Vector viewVector = new Vector(viewTo[0] - viewFrom[0], viewTo[1] - viewFrom[1], viewTo[2] - viewFrom[2]);
         double xMove = 0, yMove = 0, zMove = 0;
         double adjMovementFactor = (60.0 * movementFactor) / Calculator.clamp(drawFPS,15,maxFPS);
@@ -401,63 +443,20 @@ public class GameController extends JPanel implements KeyListener, MouseListener
         viewFrom[1] = Calculator.clamp(viewFrom[1],0,worldSize);
     }
 
-    void moveTo(double x, double y, double z) {
+    private void moveTo(double x, double y, double z) {
         viewFrom[0] = x;
         viewFrom[1] = y;
         viewFrom[2] = z;
     }
 
-    void updateView() {
+    private void updateView() {
         double r = Math.sqrt(1 - (vertLook * vertLook));
         viewTo[0] = viewFrom[0] + r * Math.cos(horLook);
         viewTo[1] = viewFrom[1] + r * Math.sin(horLook);        
         viewTo[2] = viewFrom[2] + vertLook;
     }
 
-    void setPolygonOver() {
-        polygonOver = null;
-        selectedCube = -1;
-        for(int i = newPolygonOrder.length-1; i >= 0; i --) {
-            if(DPolygons.get(newPolygonOrder[i]).getDist() <= 6) {
-                if(DPolygons.get(newPolygonOrder[i]).mouseOver() && DPolygons.get(newPolygonOrder[i]).getDraw() 
-                && !DPolygons.get(newPolygonOrder[i]).isWater())
-                {
-                    polygonOver = DPolygons.get(newPolygonOrder[i]);
-                    selectedCube = DPolygons.get(newPolygonOrder[i]).getID();
-                    selectedFace = DPolygons.get(newPolygonOrder[i]).getSide();
-                    break;
-                }
-            }
-        }
-    }
-
-    void sleepAndRefresh() {
-        long timeSLU = (long) (System.currentTimeMillis() - lastRefresh); 
-
-        checks ++;            
-        if(checks >= 15)
-        {
-            drawFPS = checks/((System.currentTimeMillis() - lastFPSCheck)/1000.0);
-            lastFPSCheck = System.currentTimeMillis();
-            checks = 0;
-        }
-
-        if(timeSLU < 1000.0/maxFPS)
-        {
-            try {
-                Thread.sleep((long) (1000.0/maxFPS - timeSLU));
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }    
-        }
-
-        lastRefresh = System.currentTimeMillis();
-
-        repaint();
-    }
-
-    public void paintComponent(Graphics g)
-    {
+    public void paintComponent(Graphics g) {
         //Clear screen and draw background color
         time = System.currentTimeMillis() % dayCycle;
         lightPercentage = 0.75 * Math.pow(Math.sin((2 * Math.PI * time) / dayCycle),2) + 0.25;
@@ -488,9 +487,10 @@ public class GameController extends JPanel implements KeyListener, MouseListener
         for(int i = 0; i < newPolygonOrder.length; i++) {
             DPolygons.get(newPolygonOrder[i]).drawPolygon(g);
         }
+        //shuffle the songs if it's done playing
+        shuffleSoundtrack();
         //draw the cross in the center of the screen
         drawMouseAim(g);            
-
         //FPS display
         drawDeveloperTools(g);
 
@@ -539,8 +539,57 @@ public class GameController extends JPanel implements KeyListener, MouseListener
         g.setFont(font);
         g.drawString(text, x, y);
     }
+    
+    private void shuffleSoundtrack() {
+        if(currentSong.getMicrosecondLength() == currentSong.getMicrosecondPosition()) {
+            currentSong = songArray[(int)(Math.random() * 7)];
+            currentSong.start();
+        }
+    }
+    
+    private void setPolygonOver() {
+        polygonOver = null;
+        selectedCube = -1;
+        for(int i = newPolygonOrder.length-1; i >= 0; i --) {
+            if(DPolygons.get(newPolygonOrder[i]).getDist() <= 6) {
+                if(DPolygons.get(newPolygonOrder[i]).mouseOver() && DPolygons.get(newPolygonOrder[i]).getDraw() 
+                && !DPolygons.get(newPolygonOrder[i]).isWater())
+                {
+                    polygonOver = DPolygons.get(newPolygonOrder[i]);
+                    selectedCube = DPolygons.get(newPolygonOrder[i]).getID();
+                    selectedFace = DPolygons.get(newPolygonOrder[i]).getSide();
+                    break;
+                }
+            }
+        }
+    }
 
-    void setOrder() {
+    private void sleepAndRefresh() {
+        long timeSLU = (long) (System.currentTimeMillis() - lastRefresh); 
+
+        checks ++;            
+        if(checks >= 15)
+        {
+            drawFPS = checks/((System.currentTimeMillis() - lastFPSCheck)/1000.0);
+            lastFPSCheck = System.currentTimeMillis();
+            checks = 0;
+        }
+
+        if(timeSLU < 1000.0/maxFPS)
+        {
+            try {
+                Thread.sleep((long) (1000.0/maxFPS - timeSLU));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }    
+        }
+
+        lastRefresh = System.currentTimeMillis();
+
+        repaint();
+    }
+
+    private void setOrder() {
         double[] k = new double[DPolygons.size()];
         newPolygonOrder = new int[DPolygons.size()];
 
@@ -566,6 +615,19 @@ public class GameController extends JPanel implements KeyListener, MouseListener
                 }
             }
         }
+    }
+
+    static int[] getChunkCoordsIn(int x, int y) {
+        return new int[]{x / chunkSize,y / chunkSize};
+    }
+
+    static int getChunkNumberIn(int x, int y) {
+        for(int i = 0; i < chunks.length; i ++) {
+            if(chunks[i].getX() == x / chunkSize && chunks[i].getY() == y / chunkSize) {
+                return i;
+            }
+        } 
+        return -1;
     }
 
     public void keyPressed(KeyEvent e) {
@@ -626,9 +688,7 @@ public class GameController extends JPanel implements KeyListener, MouseListener
             keys[7] = false;
     }
 
-    public void keyTyped(KeyEvent e) {
-
-    }
+    public void keyTyped(KeyEvent e) {}
 
     public void mouseDragged(MouseEvent m) {
         mouseMovement(m.getX(), m.getY());
