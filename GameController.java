@@ -34,6 +34,8 @@ public class GameController extends JPanel implements KeyListener, MouseListener
      * Author Edward Simpson
      * Using tutorial for matrix multiplication & math originally from https://www.youtube.com/watch?v=p4Iz0XJY-Qk&t=1294s
      * Transcribed to Java and then turned into normal trig instead of matrix multiplication -> too load bearing
+     * Used an example of how to do the orthographic projection -> couldn't find the source material 
+     * but I know it was from a youtube video.
      * Certain parts of this code are from tutorials & examples on stack overflow: 
      * Examples: Clip playing tutorial and getting multiple clips to play back to back from 
      * https://stackoverflow.com/questions/557903/how-can-i-wait-for-a-java-sound-clip-to-finish-playing-back
@@ -46,7 +48,7 @@ public class GameController extends JPanel implements KeyListener, MouseListener
      * generate perlin noise in the noise generator class, due to the complexity of the algorithm & the familiarity
      * it requires to write it well.
      * 
-     * 1,914 lines of code including this comment ᕙ(▀̿̿Ĺ̯̿̿▀̿ ̿) ᕗ
+     * 1,916 lines including this comment ᕙ(▀̿̿Ĺ̯̿̿▀̿ ̿) ᕗ
      * 
      * Hopefully you enjoy playing my game!!!
      */
